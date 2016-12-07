@@ -1,0 +1,146 @@
+1                                                          The SAS System                          14:32 Thursday, November 17, 2016
+
+1          ;*';*";*/;quit;run;
+2          OPTIONS PAGENO=MIN;
+3          %LET _CLIENTTASKLABEL='Program';
+4          %LET _CLIENTPROJECTPATH='T:\_USERDIRS\Bryan W\eConsult\Data table creation\eConsult Data Table Construction5.egp';
+5          %LET _CLIENTPROJECTNAME='eConsult Data Table Construction5.egp';
+6          %LET _SASPROGRAMFILE=;
+7          
+8          ODS _ALL_ CLOSE;
+9          OPTIONS DEV=ACTIVEX;
+10         GOPTIONS XPIXELS=0 YPIXELS=0;
+11         FILENAME EGSR TEMP;
+12         ODS tagsets.sasreport13(ID=EGSR) FILE=EGSR
+13             STYLE=HtmlBlue
+14             STYLESHEET=(URL="file:///C:/Program%20Files/SASHome/SASEnterpriseGuide/6.1/Styles/HtmlBlue.css")
+15             NOGTITLE
+16             NOGFOOTNOTE
+17             GPATH=&sasworklocation
+18             ENCODING=UTF8
+19             options(rolap="on")
+20         ;
+NOTE: Writing TAGSETS.SASREPORT13(EGSR) Body file: EGSR
+21         
+22         GOPTIONS ACCESSIBLE;
+23         data a b;
+24         x = 1;
+25         run;
+
+NOTE: The data set WORK.A has 1 observations and 1 variables.
+NOTE: The data set WORK.B has 1 observations and 1 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.00 seconds
+      memory              767.18k
+      OS Memory           23456.00k
+      Timestamp           11/23/2016 10:51:11 PM
+      Step Count                        154  Switch Count  34
+      Page Faults                       0
+      Page Reclaims                     334
+      Page Swaps                        0
+      Voluntary Context Switches        82
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           272
+      
+
+26         
+27         proc sql;
+28         create table tab1 as
+29         select *
+30         from a ;
+NOTE: Table WORK.TAB1 created, with 1 rows and 1 columns.
+
+31         
+32         create table tab2 as
+33         select *
+34         from b;
+NOTE: Table WORK.TAB2 created, with 1 rows and 1 columns.
+2                                                          The SAS System                          14:32 Thursday, November 17, 2016
+
+
+35         
+36         quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.00 seconds
+      memory              5370.34k
+      OS Memory           28580.00k
+      Timestamp           11/23/2016 10:51:11 PM
+      Step Count                        155  Switch Count  68
+      Page Faults                       0
+      Page Reclaims                     18
+      Page Swaps                        0
+      Voluntary Context Switches        231
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           272
+      
+
+37         
+38         data c;
+39         y = 2;
+40         z = 3;
+41         run;
+
+NOTE: The data set WORK.C has 1 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.00 seconds
+      system cpu time     0.00 seconds
+      memory              764.25k
+      OS Memory           23456.00k
+      Timestamp           11/23/2016 10:51:11 PM
+      Step Count                        156  Switch Count  34
+      Page Faults                       0
+      Page Reclaims                     216
+      Page Swaps                        0
+      Voluntary Context Switches        94
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           136
+      
+
+42         
+43         proc sql;
+44         create table tab3 as
+45         select *
+46         from c;
+NOTE: Table WORK.TAB3 created, with 1 rows and 2 columns.
+
+47         quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.01 seconds
+      memory              5303.81k
+      OS Memory           28580.00k
+3                                                          The SAS System                          14:32 Thursday, November 17, 2016
+
+      Timestamp           11/23/2016 10:51:11 PM
+      Step Count                        157  Switch Count  42
+      Page Faults                       0
+      Page Reclaims                     9
+      Page Swaps                        0
+      Voluntary Context Switches        97
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           136
+      
+
+48         
+49         GOPTIONS NOACCESSIBLE;
+50         %LET _CLIENTTASKLABEL=;
+51         %LET _CLIENTPROJECTPATH=;
+52         %LET _CLIENTPROJECTNAME=;
+53         %LET _SASPROGRAMFILE=;
+54         
+55         ;*';*";*/;quit;run;
+56         ODS _ALL_ CLOSE;
+57         
+58         
+59         QUIT; RUN;
+60         

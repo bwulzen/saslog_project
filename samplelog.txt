@@ -1,0 +1,1102 @@
+1                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+1          ;*';*";*/;quit;run;
+2          OPTIONS PAGENO=MIN;
+3          %LET _CLIENTTASKLABEL='Fetching Referrals';
+4          %LET _CLIENTPROJECTPATH='P:\TG\TG eConsult.egp';
+5          %LET _CLIENTPROJECTNAME='TG eConsult.egp';
+6          %LET _SASPROGRAMFILE=;
+7          
+8          ODS _ALL_ CLOSE;
+9          OPTIONS DEV=ACTIVEX;
+10         GOPTIONS XPIXELS=0 YPIXELS=0;
+11         FILENAME EGSR TEMP;
+12         ODS tagsets.sasreport13(ID=EGSR) FILE=EGSR
+13             STYLE=HtmlBlue
+14             STYLESHEET=(URL="file:///C:/Program%20Files/SASHome/SASEnterpriseGuide/6.1/Styles/HtmlBlue.css")
+15             NOGTITLE
+16             NOGFOOTNOTE
+17             GPATH=&sasworklocation
+18             ENCODING=UTF8
+19             options(rolap="on")
+20         ;
+NOTE: Writing TAGSETS.SASREPORT13(EGSR) Body file: EGSR
+21         
+22         GOPTIONS ACCESSIBLE;
+23         options fullstimer;
+24         
+25         
+26         %LET DATA_START_DATETIME = '2016-04-01-00.00.00';
+27         %LET DATA_END_DATETIME = '2016-12-31-23.59.59';
+28         
+29         
+30         
+31         /*QUESTION 1 INFORMATION*/
+32         /*WHERE DEST_FAC_ID = 'OAK' AND DEST_SPCLTY_CD = 'TCS' and dest_prbLm_cd = '003'*/
+33         
+34         /*QUESTION 2 INFORMATION*/
+35         /*WHERE (a.dest_fac_id = 'SFO' and dest_spclty_cd = 'DRM' and dest_prblm_cd = '123') */
+36         
+37         /*QUESTION 3 INFORMATION*/
+38         /*WHERE (DEST_FAC_ID = 'UNC' AND DEST_SPCLTY_CD = 'LAS' AND DEST_PRBLM_CD = '026')*/
+39         
+40         
+41         %LET SQL_CRITERIA =
+42         WHERE ((A.DEST_FAC_ID = 'OAK' AND A.DEST_SPCLTY_CD = 'TCS' and A.dest_prbLm_cd = '003')
+43         OR (a.dest_fac_id = 'SFO' and A.dest_spclty_cd = 'DRM' and A.dest_prblm_cd = '123')
+44         OR (A.DEST_FAC_ID = 'UNC' AND A.DEST_SPCLTY_CD = 'LAS' AND A.DEST_PRBLM_CD = '026'));
+45         
+46         
+47         proc sql;
+48         connect to db2 (datasrc=dsn2 authdomain="DSNDSN2_DB2_Auth");
+49         create table IK_DATA_N as
+50           select * from connection to DB2
+51             (
+52           SELECT
+53             A.SPCLTYAREA_RQST_IK as IK,
+54             A.MRN_ID AS MRN,
+55             A.DEST_SPCLTY_CD,
+56             A.DEST_FAC_ID,
+57             A.RQST_STS_TS,
+2                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+58             A.ENTRY_TS,
+59             A.UPDT_TS,
+60             A.RSPNS_DT,
+61             A.ORGN_FAC_ID,
+62             A.ORGN_DEPT_ID,
+63             A.RQST_INITN_DT,
+64             A.SVC_DT,
+65             A.RQST_PRVDR_RSRC_ID,
+66             A.DEST_PRBLM_CD,
+67             A.PRBLM_DS,
+68             A.RQST_STS_CD,
+69             B.RQST_NOTE_TX AS NOTE_TEXT
+70         
+71           FROM ECON.VECNSPR_SPCLTYRQST AS A
+72         
+73           LEFT OUTER JOIN ECON.VECNRQN_RQST_NOTE AS B
+74             ON A.SPCLTYAREA_RQST_IK = B.SPCLTYAREA_RQST_IK
+75         
+76         
+77           &SQL_CRITERIA
+78           AND A.ENTRY_TS BETWEEN &DATA_START_DATETIME. AND &DATA_END_DATETIME.
+79           AND B.RQST_NOTE_TYP_CD = 'RQ'
+80             )
+81         ;
+NOTE: Table WORK.IK_DATA_N created, with 360 rows and 17 columns.
+
+82         disconnect from DB2;
+83         quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           6.45 seconds
+      user cpu time       0.03 seconds
+      system cpu time     0.06 seconds
+      memory              5464.96k
+      OS Memory           32680.00k
+      Timestamp           11/10/2016 08:09:14 PM
+      Step Count                        243  Switch Count  194
+      Page Faults                       38
+      Page Reclaims                     751
+      Page Swaps                        0
+      Voluntary Context Switches        1065
+      Involuntary Context Switches      0
+      Block Input Operations            29696
+      Block Output Operations           23304
+      
+
+84         
+85         proc sql;
+86         connect to db2 (datasrc=dsn2 authdomain="DSNDSN2_DB2_Auth");
+87         create table IK_DATA_A as
+88           select * from connection to DB2
+89             (
+90           SELECT
+91             A.SPCLTYAREA_RQST_IK as IK,
+92             A.MRN_ID AS MRN,
+93             A.DEST_SPCLTY_CD,
+94             A.DEST_FAC_ID,
+95             A.RQST_STS_TS,
+96             A.ENTRY_TS,
+3                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+97             A.UPDT_TS,
+98             A.RSPNS_DT,
+99             A.ORGN_FAC_ID,
+100            A.ORGN_DEPT_ID,
+101            A.RQST_INITN_DT,
+102            A.SVC_DT,
+103            A.RQST_PRVDR_RSRC_ID,
+104            A.DEST_PRBLM_CD,
+105            A.PRBLM_DS,
+106            A.RQST_STS_CD,
+107            B.RQST_NOTE_TX AS NOTE_TEXT
+108        
+109          FROM ECON.VECASPR_SPCLTYRQST AS A
+110        
+111          LEFT OUTER JOIN ECON.VECARQN_RQST_NOTE AS B
+112            ON A.SPCLTYAREA_RQST_IK = B.SPCLTYAREA_RQST_IK
+113        
+114        
+115          &SQL_CRITERIA
+116          AND A.ENTRY_TS BETWEEN &DATA_START_DATETIME. AND &DATA_END_DATETIME.
+117          AND B.RQST_NOTE_TYP_CD = 'RQ'
+118            )
+119        ;
+NOTE: Table WORK.IK_DATA_A created, with 301 rows and 17 columns.
+
+120        disconnect from DB2;
+121        quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           13.57 seconds
+      user cpu time       0.03 seconds
+      system cpu time     0.05 seconds
+      memory              5455.68k
+      OS Memory           32680.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        244  Switch Count  194
+      Page Faults                       0
+      Page Reclaims                     142
+      Page Swaps                        0
+      Voluntary Context Switches        999
+      Involuntary Context Switches      0
+      Block Input Operations            40
+      Block Output Operations           19464
+      
+
+122        
+123        DATA IK_DATA;
+124        SET IK_DATA_N IK_DATA_A;
+125        RUN;
+
+NOTE: There were 360 observations read from the data set WORK.IK_DATA_N.
+NOTE: There were 301 observations read from the data set WORK.IK_DATA_A.
+NOTE: The data set WORK.IK_DATA has 661 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.06 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.05 seconds
+      memory              1630.65k
+      OS Memory           28336.00k
+4                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        245  Switch Count  38
+      Page Faults                       0
+      Page Reclaims                     326
+      Page Swaps                        0
+      Voluntary Context Switches        83
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           42504
+      
+
+126        
+127        PROC DATASETS;
+128        DELETE IK_DATA_N IK_DATA_A;
+129        RUN;
+
+NOTE: Deleting WORK.IK_DATA_N (memtype=DATA).
+NOTE: Deleting WORK.IK_DATA_A (memtype=DATA).
+130        
+131        
+132        
+133        
+134        
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.07 seconds
+      user cpu time       0.04 seconds
+      system cpu time     0.01 seconds
+      memory              698.65k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        246  Switch Count  58
+      Page Faults                       2
+      Page Reclaims                     204
+      Page Swaps                        0
+      Voluntary Context Switches        194
+      Involuntary Context Switches      0
+      Block Input Operations            592
+      Block Output Operations           24
+      
+135        DATA find_question_blocks;
+
+136        	SET IK_DATA;
+137        	ARRAY QUESTION_STARTS[*] 8 QUESTION_START1-QUESTION_START30;
+138        	ARRAY QUESTION_BLOCKS[*] $ 500 QUESTION_BLOCK1 - QUESTION_BLOCK30;
+139        
+140        	/*
+141        	THE FOLLOWING LOOP CREATES AN ARRAY IN WHICH EACH ELEMENT CONTAINS
+142        	THE STARTING POSITION OF 'QUESTION TEXT=', SIGNIFYING WHERE QUESTIONS BEGIN.
+143        
+144        	THE LOGIC IS AS FOLLOWS.
+145        	THE SECOND AND THIRD IF STATEMENTS ARE FOR WHEN I = 1. IF 'QUESTION TEXT=' IS FOUND,
+146        	THEN ITS LOCATION IS STORED IN THE 1ST ELEMENT. IF NOT, I IS SET TO 31, ENDING THE LOOP.
+147        
+148        	THE FIRST IF IS THE MAIN PART OF THE LOOP THAT WILL RUN MULTIPLE TIMES.
+149        	IT IS A FIND STATEMENT WHERE THE STARTING POSITION IS QUESTION_STARTS[I - 1] + 1, WHICH IS
+150        	ONE CHARACTER BEYOND WHERE THE PREVIOUS 'QUESTION TEXT=' WAS FOUND.
+151        	IF THE FIND STATEMENT = 0, THEN THE PREVIOUS 'QUESTION TEXT=' WAS THE LAST ONE IN THE TEXT,
+5                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+152        		AND SO I IS SET TO 31, ENDING THE LOOP.
+153        	IF THE FIND STATEMENT > 0, THEN THE LOCATION IS STORED AND THE LOOP RUNS AGAIN.
+154        		*/
+155        	DO I = 1 TO 30;
+156        		IF I > 1 THEN
+157        			DO;
+158        				IF FIND(note_TEXT, 'QUESTION TEXT=', QUESTION_STARTS[I-1] + 1) > 0 THEN
+159        					QUESTION_STARTS[I] = FIND(note_TEXT, 'QUESTION TEXT=', QUESTION_STARTS[I-1] + 1);
+160        				ELSE I = 31;
+161        			END;
+162        
+163        		IF I = 1 AND FIND(note_TEXT, 'QUESTION TEXT=') > 0 THEN
+164        			DO;
+165        				QUESTION_STARTS[1] = FIND(note_TEXT, 'QUESTION TEXT=');
+166        			END;
+167        
+168        		IF I = 1 AND FIND(note_TEXT, 'QUESTION TEXT=') = 0 THEN
+169        			I = 31;
+170        	END;
+171        
+172        
+173        /*THE ABOVE LOOP FOUND THE CHARACTER POSITIONS OF THE START OF QUESTION BLOCKS
+174        	THIS LOOP TAKES THOSE AND RETRIEVES THE ACTUAL BLOCKS
+175        	THE 'QUESTION BLOCKS' ALSO CONTAIN ALL CORRESPONDING ANSWERS*/
+176        	DO I = 1 TO 30;
+177        	IF QUESTION_STARTS[I] = . THEN I = 31;
+178        	ELSE IF QUESTION_STARTS[I + 1] = . THEN QUESTION_BLOCKS[I] = TRIM(SUBSTR(note_TEXT, QUESTION_STARTS[I]));
+179        	ELSE QUESTION_BLOCKS[I] = TRIM(SUBSTR(note_TEXT, QUESTION_STARTS[I], (QUESTION_STARTS[I+1] - QUESTION_STARTS[I])));
+180        	END;
+181        
+182        
+183        	KEEP IK QUESTION_BLOCK1-QUESTION_BLOCK30;
+184        
+185        
+186        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.IK_DATA.
+NOTE: The data set WORK.FIND_QUESTION_BLOCKS has 661 observations and 31 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.08 seconds
+      user cpu time       0.06 seconds
+      system cpu time     0.04 seconds
+      memory              1276.21k
+      OS Memory           28076.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        247  Switch Count  230
+      Page Faults                       0
+      Page Reclaims                     321
+      Page Swaps                        0
+      Voluntary Context Switches        867
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           19928
+      
+
+187        
+188        DATA IK_dATA;
+189        SET IK_DATA;
+6                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+190        DROP NOTE_TEXT;
+191        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.IK_DATA.
+NOTE: The data set WORK.IK_DATA has 661 observations and 16 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      user cpu time       0.00 seconds
+      system cpu time     0.02 seconds
+      memory              1232.56k
+      OS Memory           27816.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        248  Switch Count  40
+      Page Faults                       0
+      Page Reclaims                     243
+      Page Swaps                        0
+      Voluntary Context Switches        106
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           264
+      
+
+192        
+193        PROC SORT DATA = find_question_blocks;
+194        BY ik;
+195        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.FIND_QUESTION_BLOCKS.
+NOTE: The data set WORK.FIND_QUESTION_BLOCKS has 661 observations and 31 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.03 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.03 seconds
+      memory              12147.03k
+      OS Memory           39392.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        249  Switch Count  32
+      Page Faults                       0
+      Page Reclaims                     2587
+      Page Swaps                        0
+      Voluntary Context Switches        74
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           19928
+      
+
+196        
+197        
+198        
+199        
+200        
+201        
+202        PROC TRANSPOSE DATA = find_question_blocks OUT = transpose_question_blocks;
+203        BY ik;
+204        VAR QUESTION_BLOCK1 - QUESTION_BLOCK30;
+205        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.FIND_QUESTION_BLOCKS.
+7                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+NOTE: The data set WORK.TRANSPOSE_QUESTION_BLOCKS has 19830 observations and 3 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.05 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.02 seconds
+      memory              2743.28k
+      OS Memory           29868.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        250  Switch Count  42
+      Page Faults                       2
+      Page Reclaims                     81
+      Page Swaps                        0
+      Voluntary Context Switches        119
+      Involuntary Context Switches      0
+      Block Input Operations            664
+      Block Output Operations           20624
+      
+
+206        
+207        PROC DATASETS LIBRARY = WORK;
+208        DELETE FIND_QUESTION_BLOCKS;
+209        RUN;
+
+NOTE: Deleting WORK.FIND_QUESTION_BLOCKS (memtype=DATA).
+210        
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.04 seconds
+      user cpu time       0.03 seconds
+      system cpu time     0.00 seconds
+      memory              397.43k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        251  Switch Count  38
+      Page Faults                       0
+      Page Reclaims                     16
+      Page Swaps                        0
+      Voluntary Context Switches        110
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           24
+      
+211        DATA transpose_question_blocks;
+
+212        SET transpose_question_blocks;
+213        RENAME _NAME_ = QUESTION_BLOCK_ID COL1 = QUESTION_BLOCK;
+214        IF COL1 NE ' ';
+215        /*question_length = length(col1);*/
+216        RUN;
+
+NOTE: There were 19830 observations read from the data set WORK.TRANSPOSE_QUESTION_BLOCKS.
+NOTE: The data set WORK.TRANSPOSE_QUESTION_BLOCKS has 5393 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.01 seconds
+      memory              928.62k
+      OS Memory           27556.00k
+8                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        252  Switch Count  46
+      Page Faults                       0
+      Page Reclaims                     208
+      Page Swaps                        0
+      Voluntary Context Switches        114
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           5640
+      
+
+217        
+218        /*PROC UNIVARIATE DATA = transpose_question_blocks;*/
+219        /*HISTOGRAM question_length;*/
+220        /*RUN; */
+221        
+222        /*proc freq data = transpose_question_blocks  order = freq;*/
+223        /*table question_block_id;*/
+224        /*run; */
+225        
+226        DATA FIND_ANSWER_BLOCKS;
+227        	SET TRANSPOSE_QUESTION_BLOCKS;
+228        	ARRAY ANSWER_STARTS[*] 8 ANSWER_STARTS1 - ANSWER_STARTS20;
+229        	ARRAY ANSWER_BLOCKS[*] $ 500 ANSWER_BLOCK1 - ANSWER_BLOCK20;
+230        	KEEP IK QUESTION_BLOCK_ID QUESTION_BLOCK ANSWER_BLOCK1 - ANSWER_BLOCK20;
+231        
+232        	DO I = 1 TO 20;
+233        		IF I > 1 THEN
+234        			DO;
+235        				IF FIND(QUESTION_BLOCK, 'ANSWER TEXT=', ANSWER_STARTS[I-1] + 1) > 0 THEN
+236        					ANSWER_STARTS[I] = FIND(QUESTION_BLOCK, 'ANSWER TEXT=', ANSWER_STARTS[I-1] + 1);
+237        				ELSE I = 21;
+238        			END;
+239        
+240        		IF I = 1 AND FIND(QUESTION_BLOCK, 'ANSWER TEXT=') > 0 THEN
+241        			DO;
+242        				ANSWER_STARTS[1] = FIND(QUESTION_BLOCK, 'ANSWER TEXT=');
+243        			END;
+244        
+245        		IF I = 1 AND FIND(QUESTION_BLOCK, 'ANSWER TEXT=') = 0 THEN
+246        			I = 16;
+247        	END;
+248        
+249        	DO I = 1 TO 20;
+250        		IF ANSWER_STARTS[I] = . THEN
+251        			I = 21;
+252        		ELSE IF ANSWER_STARTS[I + 1] = . THEN
+253        			ANSWER_BLOCKS[I] = TRIM(SUBSTR(QUESTION_BLOCK, ANSWER_STARTS[I]));
+254        		ELSE ANSWER_BLOCKS[I] = TRIM(SUBSTR(QUESTION_BLOCK, ANSWER_STARTS[I], (ANSWER_STARTS[I+1] - ANSWER_STARTS[I])));
+255        	END;
+256        RUN;
+
+NOTE: Missing values were generated as a result of performing an operation on missing values.
+      Each place is given by: (Number of times) at (Line):(Column).
+      447 at 235:8    447 at 235:64   
+NOTE: There were 5393 observations read from the data set WORK.TRANSPOSE_QUESTION_BLOCKS.
+NOTE: The data set WORK.FIND_ANSWER_BLOCKS has 5393 observations and 23 variables.
+NOTE: DATA statement used (Total process time):
+9                                                          The SAS System                          12:28 Thursday, November 10, 2016
+
+      real time           0.11 seconds
+      user cpu time       0.02 seconds
+      system cpu time     0.11 seconds
+      memory              965.56k
+      OS Memory           27816.00k
+      Timestamp           11/10/2016 08:09:28 PM
+      Step Count                        253  Switch Count  154
+      Page Faults                       0
+      Page Reclaims                     243
+      Page Swaps                        0
+      Voluntary Context Switches        547
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           115208
+      
+
+257        
+258        
+259        
+260        
+261        
+262        /*IT SEEMS LIKE 15 ANSWERS IS LIKELY APPROPRIATE - THE MAX IN JUNE 2015 WAS 14 ANSWERS*/
+263        
+264        
+265        
+266        PROC SORT DATA = FIND_ANSWER_BLOCKS;
+267        	BY IK QUESTION_BLOCK_ID;
+268        RUN;
+
+NOTE: There were 5393 observations read from the data set WORK.FIND_ANSWER_BLOCKS.
+NOTE: The data set WORK.FIND_ANSWER_BLOCKS has 5393 observations and 23 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.21 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.20 seconds
+      memory              59719.78k
+      OS Memory           86680.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        254  Switch Count  32
+      Page Faults                       0
+      Page Reclaims                     14366
+      Page Swaps                        0
+      Voluntary Context Switches        76
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           115208
+      
+
+269        
+270        PROC TRANSPOSE DATA = FIND_ANSWER_BLOCKS OUT = TRANSPOSE_ANSWER_BLOCKS;
+271        	BY IK QUESTION_BLOCK_ID;
+272        	VAR ANSWER_BLOCK1 - ANSWER_BLOCK16;
+273        RUN;
+
+NOTE: There were 5393 observations read from the data set WORK.FIND_ANSWER_BLOCKS.
+NOTE: The data set WORK.TRANSPOSE_ANSWER_BLOCKS has 86288 observations and 4 variables.
+NOTE: PROCEDURE TRANSPOSE used (Total process time):
+      real time           0.16 seconds
+10                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+      user cpu time       0.04 seconds
+      system cpu time     0.12 seconds
+      memory              2857.37k
+      OS Memory           29868.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        255  Switch Count  42
+      Page Faults                       0
+      Page Reclaims                     76
+      Page Swaps                        0
+      Voluntary Context Switches        101
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           92304
+      
+
+274        
+275        PROC DATASETS LIBRARY = WORK;
+276        DELETE FIND_ANSWER_BLOCKS;
+277        RUN;
+
+NOTE: Deleting WORK.FIND_ANSWER_BLOCKS (memtype=DATA).
+278        
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.10 seconds
+      user cpu time       0.04 seconds
+      system cpu time     0.02 seconds
+      memory              390.15k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        256  Switch Count  38
+      Page Faults                       0
+      Page Reclaims                     16
+      Page Swaps                        0
+      Voluntary Context Switches        113
+      Involuntary Context Switches      1
+      Block Input Operations            0
+      Block Output Operations           24
+      
+279        DATA TRANSPOSE_ANSWER_BLOCKS;
+
+280        	SET TRANSPOSE_ANSWER_BLOCKS;
+281        	RENAME _NAME_ = ANSWER_BLOCK_ID COL1 = ANSWER_BLOCK;
+282        	IF COL1 NE ' ';
+283        /*	ANSWER_LENGTH = LENGTH(COL1);*/
+284        RUN;
+
+NOTE: There were 86288 observations read from the data set WORK.TRANSPOSE_ANSWER_BLOCKS.
+NOTE: The data set WORK.TRANSPOSE_ANSWER_BLOCKS has 5051 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.09 seconds
+      user cpu time       0.05 seconds
+      system cpu time     0.04 seconds
+      memory              928.34k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        257  Switch Count  42
+      Page Faults                       0
+11                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+      Page Reclaims                     215
+      Page Swaps                        0
+      Voluntary Context Switches        115
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           5512
+      
+
+285        
+286        /*proc freq data = transpose_answer_blocks order = freq;*/
+287        /*table answer_block_id;*/
+288        /*run; */
+289        /**/
+290        /*proc univariate data = transpose_answer_blocks;*/
+291        /*hist answer_length;*/
+292        /*run; */
+293        
+294        
+295        
+296        PROC SORT DATA = transpose_question_blocks;
+297        	BY ik QUESTION_BLOCK_ID;
+298        
+
+NOTE: There were 5393 observations read from the data set WORK.TRANSPOSE_QUESTION_BLOCKS.
+NOTE: The data set WORK.TRANSPOSE_QUESTION_BLOCKS has 5393 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      user cpu time       0.00 seconds
+      system cpu time     0.01 seconds
+      memory              4764.78k
+      OS Memory           31676.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        258  Switch Count  34
+      Page Faults                       0
+      Page Reclaims                     716
+      Page Swaps                        0
+      Voluntary Context Switches        81
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           5640
+      
+299        DATA ANSWER_DETAILS;
+
+300        	MERGE transpose_question_blocks transpose_answer_blocks;
+301        	BY ik QUESTION_BLOCK_ID;
+302        RUN;
+
+NOTE: There were 5393 observations read from the data set WORK.TRANSPOSE_QUESTION_BLOCKS.
+NOTE: There were 5051 observations read from the data set WORK.TRANSPOSE_ANSWER_BLOCKS.
+NOTE: The data set WORK.ANSWER_DETAILS has 5498 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.01 seconds
+      memory              1067.12k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        259  Switch Count  36
+12                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+      Page Faults                       0
+      Page Reclaims                     217
+      Page Swaps                        0
+      Voluntary Context Switches        90
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           11272
+      
+
+303        
+304        PROC DATASETS LIBRARY = WORK;
+305        DELETE TRANSPOSE_QUESTION_BLOCKS TRANSPOSE_ANSWER_BLOCKS;
+306        RUN;
+
+NOTE: Deleting WORK.TRANSPOSE_QUESTION_BLOCKS (memtype=DATA).
+NOTE: Deleting WORK.TRANSPOSE_ANSWER_BLOCKS (memtype=DATA).
+307        
+308        /*PULL OUT ONLY THE IMPORTANT PART OF THE QUESTION/ANSWER BLOCKS
+309        BY FINDING THE QUOTES THEY STARTA AND END WITH
+310        AND ONLY KEEPING THE TEXT BETWEEN THE QUOTES*/
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.04 seconds
+      user cpu time       0.04 seconds
+      system cpu time     0.00 seconds
+      memory              397.53k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        260  Switch Count  54
+      Page Faults                       0
+      Page Reclaims                     16
+      Page Swaps                        0
+      Voluntary Context Switches        167
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           16
+      
+311        DATA ANSWER_DETAILS;
+
+312        	SET ANSWER_DETAILS;
+313        	LENGTH QUESTION_CLEAN ANSWER_CLEAN $ 500;
+314        	A_QUOTE_1 = FIND(ANSWER_BLOCK, '"');
+315        	A_QUOTE_2 = FIND(ANSWER_BLOCK, '"', A_QUOTE_1 + 1);
+316        	Q_QUOTE_1 = FIND(QUESTION_BLOCK, '"');
+317        	Q_QUOTE_2 = FIND(QUESTION_BLOCK, '"', Q_QUOTE_1 + 1);
+318        	IF Q_QUOTE_2 > 0 THEN	QUESTION_CLEAN = SUBSTR(QUESTION_BLOCK, Q_QUOTE_1 + 1, (Q_QUOTE_2 - Q_QUOTE_1 - 1));
+319        	ELSE QUESTION_CLEAN = SUBSTR(QUESTION_BLOCK, Q_QUOTE_1 + 1);
+320        	
+321        	IF A_QUOTE_1 = 0 THEN ANSWER_CLEAN = ' ';
+322        	ELSE IF A_QUOTE_1 + 1 = A_QUOTE_2 THEN ANSWER_CLEAN = SUBSTR(ANSWER_BLOCK, A_QUOTE_1 + 1);
+323        	ELSE IF A_QUOTE_2 = 0 THEN ANSWER_CLEAN = SUBSTR(ANSWER_BLOCK, A_QUOTE_1 + 1);
+324        	ELSE ANSWER_CLEAN = SUBSTR(ANSWER_BLOCK, A_QUOTE_1 + 1, (A_QUOTE_2 - A_QUOTE_1 - 1));
+325        
+326         IF ANSWER_CLEAN IN ('"/></QUESTION><', '"/></QUESTION></NOTE>', ' ') THEN DO;
+327         		ANSWER_BLOCK_ID = 'NOT_ANSWERED';
+328        		ANSWER_BLOCK = 'NOT ANSWERED';
+329        		ANSWER_CLEAN = 'NOT ANSWERED';
+330        		END;
+13                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+331        	DROP A_QUOTE_1 A_QUOTE_2 Q_QUOTE_1 Q_QUOTE_2;
+332        
+333        Q_BLOCK_NUM = MAX(SUBSTR(QUESTION_BLOCK_ID, 15), 0);
+334        A_BLOCK_NUM = MAX(SUBSTR(ANSWER_BLOCK_ID, 13), 0);
+335        RUN;
+
+NOTE: Character values have been converted to numeric values at the places given by: (Line):(Column).
+      333:19   334:19   
+NOTE: There were 5498 observations read from the data set WORK.ANSWER_DETAILS.
+NOTE: The data set WORK.ANSWER_DETAILS has 5498 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.04 seconds
+      user cpu time       0.02 seconds
+      system cpu time     0.03 seconds
+      memory              1010.56k
+      OS Memory           27816.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        261  Switch Count  126
+      Page Faults                       0
+      Page Reclaims                     237
+      Page Swaps                        0
+      Voluntary Context Switches        452
+      Involuntary Context Switches      2
+      Block Input Operations            0
+      Block Output Operations           22536
+      
+
+336        
+337        DATA IK_DETAIL_FILE;
+338        SET ANSWER_DETAILS (KEEP = IK Q_BLOCK_NUM QUESTION_cLEAN A_BLOCK_NUM ANSWER_CLEAN);
+339        RENAME QUESTION_CLEAN = QUESTION
+340        ANSWER_CLEAN = ANSWER
+341        Q_BLOCK_NUM = QUESTION_NUMBER
+342        A_BLOCK_NUM = ANSWER_NUMBER;
+343        RUN;
+
+NOTE: There were 5498 observations read from the data set WORK.ANSWER_DETAILS.
+NOTE: The data set WORK.IK_DETAIL_FILE has 5498 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.02 seconds
+      memory              1181.68k
+      OS Memory           27816.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        262  Switch Count  48
+      Page Faults                       0
+      Page Reclaims                     239
+      Page Swaps                        0
+      Voluntary Context Switches        146
+      Involuntary Context Switches      0
+      Block Input Operations            32
+      Block Output Operations           11272
+      
+
+344        
+345        proc datasets;
+346        delete answer_Details;
+14                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+347        run;
+
+NOTE: Deleting WORK.ANSWER_DETAILS (memtype=DATA).
+348        
+349        
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.04 seconds
+      user cpu time       0.04 seconds
+      system cpu time     0.00 seconds
+      memory              398.18k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        263  Switch Count  46
+      Page Faults                       0
+      Page Reclaims                     16
+      Page Swaps                        0
+      Voluntary Context Switches        139
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           24
+      
+350        PROC SORT DATA = IK_DETAIL_FILE;
+
+351        BY IK question_number answer_number;
+352        RUN;
+
+NOTE: There were 5498 observations read from the data set WORK.IK_DETAIL_FILE.
+NOTE: The data set WORK.IK_DETAIL_FILE has 5498 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.02 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.02 seconds
+      memory              6866.93k
+      OS Memory           33732.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        264  Switch Count  30
+      Page Faults                       0
+      Page Reclaims                     1400
+      Page Swaps                        0
+      Voluntary Context Switches        65
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           11272
+      
+
+353        
+354        /*DATA TDRIVE.IK_DETAIL_FILE;*/
+355        /*SET IK_DETAIL_FILE;*/
+356        /*RUN; */
+357        /**/
+358        /*DATA TDRIVE.IK_SUMMARY_FILE;*/
+359        /*SET IK_SUMMARY_FILE;*/
+360        /*RUN; */
+361        
+362        DATA IK_SUMMARY_FILE;
+363        SET IK_DATA;
+364        MRN10 = MRN;
+15                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+365        MRN8 = SUBSTR(MRN, 3);
+366        DROP MRN;
+367        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.IK_DATA.
+NOTE: The data set WORK.IK_SUMMARY_FILE has 661 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.01 seconds
+      memory              967.37k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        265  Switch Count  48
+      Page Faults                       0
+      Page Reclaims                     200
+      Page Swaps                        0
+      Voluntary Context Switches        143
+      Involuntary Context Switches      0
+      Block Input Operations            16
+      Block Output Operations           264
+      
+
+368        
+369        DATA IK_SUMMARY_FILE;
+370        LENGTH MRN $ 8;
+371        SET IK_SUMMARY_FILE;
+372        MRN = MRN8;
+373        DROP MRN8;
+374        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.IK_SUMMARY_FILE.
+NOTE: The data set WORK.IK_SUMMARY_FILE has 661 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.00 seconds
+      memory              943.12k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        266  Switch Count  44
+      Page Faults                       0
+      Page Reclaims                     198
+      Page Swaps                        0
+      Voluntary Context Switches        123
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           264
+      
+
+375        
+376        %MACRO ECONSULT_STATUS_DESCRIPTIONS(DATASET, STATUS_VARIABLE);
+377        DATA &DATASET;
+378        SET &DATASET;
+379        LENGTH STATUS_DESC $ 50;
+380        IF &STATUS_VARIABLE = 2 THEN STATUS_DESC = 'Response needed';
+381        ELSE IF &STATUS_VARIABLE = 3 THEN STATUS_DESC = 'Forwarded';
+382        ELSE IF &STATUS_VARIABLE = 4 THEN STATUS_DESC = 'Response pending';
+16                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+383        ELSE IF &STATUS_VARIABLE = 9 THEN STATUS_DESC = 'Appointment needed';
+384        ELSE IF &STATUS_VARIABLE = 11 THEN STATUS_DESC = 'Direct-scheduling attempted - appointment needed';
+385        ELSE IF &STATUS_VARIABLE = 21 THEN STATUS_DESC = 'Consultation request on PARRS booklist';
+386        ELSE IF &STATUS_VARIABLE = 22 THEN STATUS_DESC = 'Direct-scheduling request for PARRS booklist';
+387        ELSE IF &STATUS_VARIABLE = 23 THEN STATUS_DESC = 'Appointment scheduled';
+388        ELSE IF &STATUS_VARIABLE = 24 THEN STATUS_DESC = 'Appointment direct-scheduled';
+389        ELSE IF &STATUS_VARIABLE = 25 THEN STATUS_DESC = 'Reschedule of provider cancel';
+390        ELSE IF &STATUS_VARIABLE = 27 THEN STATUS_DESC = 'Reschedule of FTKA';
+391        ELSE IF &STATUS_VARIABLE = 29 THEN STATUS_DESC = 'Reschedule by pt request';
+392        ELSE IF &STATUS_VARIABLE = 40 THEN STATUS_DESC = 'Clinic cancel';
+393        ELSE IF &STATUS_VARIABLE = 41 THEN STATUS_DESC = 'Provider cancel';
+394        ELSE IF &STATUS_VARIABLE = 42 THEN STATUS_DESC = 'PARRS entry error';
+395        ELSE IF &STATUS_VARIABLE = 43 THEN STATUS_DESC = 'Patient cancelled';
+396        ELSE IF &STATUS_VARIABLE = 45 THEN STATUS_DESC = 'Patient FTKA';
+397        ELSE IF &STATUS_VARIABLE = 50 THEN STATUS_DESC = 'Appointment status unknown';
+398        ELSE IF &STATUS_VARIABLE = 60 THEN STATUS_DESC = 'Advice to sender';
+399        ELSE IF &STATUS_VARIABLE = 61 THEN STATUS_DESC = 'Refused by patient';
+400        ELSE IF &STATUS_VARIABLE = 62 THEN STATUS_DESC = 'Patient FTKA';
+401        ELSE IF &STATUS_VARIABLE = 63 THEN STATUS_DESC = 'Referred to non KP';
+402        ELSE IF &STATUS_VARIABLE = 64 THEN STATUS_DESC = 'Unable to contact patient';
+403        ELSE IF &STATUS_VARIABLE = 65 THEN STATUS_DESC = 'Manual patient seen';
+404        ELSE IF &STATUS_VARIABLE = 66 THEN STATUS_DESC = 'In-patient';
+405        ELSE IF &STATUS_VARIABLE = 67 THEN STATUS_DESC = 'Patient seen';
+406        ELSE IF &STATUS_VARIABLE = 68 THEN STATUS_DESC = 'Changed provider';
+407        ELSE IF &STATUS_VARIABLE = 69 THEN STATUS_DESC = 'Patient expired';
+408        ELSE IF &STATUS_VARIABLE = 70 THEN STATUS_DESC = 'Phone consult';
+409        ELSE IF &STATUS_VARIABLE = 71 THEN STATUS_DESC = 'Secure message with patient';
+410        ELSE IF &STATUS_VARIABLE = 72 THEN STATUS_DESC = 'Telephone encounter with patient';
+411        ELSE IF &STATUS_VARIABLE = 73 THEN STATUS_DESC = 'Roving specialist with patient';
+412        ELSE IF &STATUS_VARIABLE = 80 THEN STATUS_DESC = 'Closed by clinic';
+413        ELSE IF &STATUS_VARIABLE = 99 THEN STATUS_DESC = 'Entered in error';
+414        ELSE STATUS_DESC = 'DESCRIPTION NOT FOUND';
+415        RUN;
+416        %MEND ECONSULT_STATUS_DESCRIPTIONS;
+417        
+418        %ECONSULT_STATUS_DESCRIPTIONS(ik_summary_file, RQST_STS_CD);
+
+NOTE: Character values have been converted to numeric values at the places given by: (Line):(Column).
+      418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2
+      418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2   418:2
+      418:2   418:2   418:2   418:2   
+NOTE: There were 661 observations read from the data set WORK.IK_SUMMARY_FILE.
+NOTE: The data set WORK.IK_SUMMARY_FILE has 661 observations and 18 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.00 seconds
+      memory              973.62k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        267  Switch Count  30
+      Page Faults                       0
+      Page Reclaims                     199
+      Page Swaps                        0
+      Voluntary Context Switches        65
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           264
+17                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+      
+
+419        
+420        PROC SORT DATA = IK_SUMMARY_FILE;
+421        BY MRN ENTRY_TS;
+422        RUN;
+
+NOTE: There were 661 observations read from the data set WORK.IK_SUMMARY_FILE.
+NOTE: The data set WORK.IK_SUMMARY_FILE has 661 observations and 18 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.00 seconds
+      memory              549.15k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:29 PM
+      Step Count                        268  Switch Count  32
+      Page Faults                       0
+      Page Reclaims                     3
+      Page Swaps                        0
+      Voluntary Context Switches        73
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           264
+      
+
+423        
+424        %let srvnode = msys.crdc.kp.org 2003;
+425        libname PARFU remote "DOQ.MON.MRNPARFU.CURRENT.DISK" disp=shr
+426        server=srvnode.server6 authdomain="msysAuth" access=readonly;
+NOTE: Libref PARFU was successfully assigned as follows: 
+      Engine:        REMOTE 
+      Physical Name: DOQ.MON.MRNPARFU.CURRENT.DISK
+427        
+428        proc sql;
+429          create table mrn_parfu as
+430          select a.mrn, bdate, age, parfumob, parfumob, bestzip
+431            from parfu.allmemb a
+432           inner join ik_mrns b
+433              on a.mrn = b.mrn;
+WARNING: Variable parfumob already exists on file WORK.MRN_PARFU.
+NOTE: Table WORK.MRN_PARFU created, with 439 rows and 5 columns.
+
+434        quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           4.31 seconds
+      user cpu time       0.06 seconds
+      system cpu time     0.02 seconds
+      memory              6661.00k
+      OS Memory           33192.00k
+      Timestamp           11/10/2016 08:09:34 PM
+      Step Count                        269  Switch Count  964
+      Page Faults                       0
+      Page Reclaims                     328
+      Page Swaps                        0
+      Voluntary Context Switches        2131
+      Involuntary Context Switches      0
+      Block Input Operations            144
+18                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+      Block Output Operations           144
+      
+
+435        
+436        LIBNAME PARFU CLEAR;
+NOTE: Libref PARFU has been deassigned.
+437        
+438        proc sql;
+439        create table ik_summary_file as
+440        select *
+441        from ik_summary_file a
+442        left join mrn_parfu b
+443        on a.mrn = b.mrn;
+WARNING: This CREATE TABLE statement recursively references the target table. A consequence of this is a possible data integrity 
+         problem.
+WARNING: Variable mrn already exists on file WORK.IK_SUMMARY_FILE.
+NOTE: Table WORK.IK_SUMMARY_FILE created, with 661 rows and 22 columns.
+
+444        quit;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      user cpu time       0.01 seconds
+      system cpu time     0.01 seconds
+      memory              5507.65k
+      OS Memory           32680.00k
+      Timestamp           11/10/2016 08:09:34 PM
+      Step Count                        270  Switch Count  52
+      Page Faults                       0
+      Page Reclaims                     35
+      Page Swaps                        0
+      Voluntary Context Switches        153
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           400
+      
+
+445        
+446        proc datasets;
+447        delete IK_DATA mrn_parfu;
+448        run;
+
+NOTE: Deleting WORK.IK_DATA (memtype=DATA).
+NOTE: Deleting WORK.MRN_PARFU (memtype=DATA).
+449        
+450        
+451        
+452        
+453        GOPTIONS NOACCESSIBLE;
+454        %LET _CLIENTTASKLABEL=;
+455        %LET _CLIENTPROJECTPATH=;
+456        %LET _CLIENTPROJECTNAME=;
+457        %LET _SASPROGRAMFILE=;
+458        
+459        ;*';*";*/;quit;
+
+NOTE: PROCEDURE DATASETS used (Total process time):
+      real time           0.04 seconds
+      user cpu time       0.04 seconds
+19                                                         The SAS System                          12:28 Thursday, November 10, 2016
+
+      system cpu time     0.00 seconds
+      memory              398.25k
+      OS Memory           27556.00k
+      Timestamp           11/10/2016 08:09:34 PM
+      Step Count                        271  Switch Count  87
+      Page Faults                       0
+      Page Reclaims                     16
+      Page Swaps                        0
+      Voluntary Context Switches        281
+      Involuntary Context Switches      0
+      Block Input Operations            0
+      Block Output Operations           24
+      
+459      !                run;
+
+460        ODS _ALL_ CLOSE;
+461        
+462        
+463        QUIT; RUN;
+464        
